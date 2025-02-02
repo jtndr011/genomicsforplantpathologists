@@ -88,8 +88,9 @@ There will be two files starting with `MyFirstJob`
 ```bash
 ls
 ```
-
+Use `less` or `cat` commands to check the contents of `MyFirstJob.o#####` Note: ##### will be the job id numbers.
 ### Installing SRAtoolkit
+
 1) Download SRAtoolkit tar file
 ```bash
 wget --output-document sratoolkit.tar.gz https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/current/sratoolkit.current-ubuntu64.tar.gz
@@ -134,8 +135,6 @@ AAGTAGGTCTCGTCTGTGTTTTCTACGAGCTTGTGTTCCAGCTGACCCACTCCCTGGGTGGGGGGACTGGGT
 +SRR390728.2 2 length=72
 ;;;;;;;;;;;;;;;;;4;;;;3;393.1+4&&5&&;;;;;;;;;;;;;;;;;;;;;<9;<;;;;;464262
 ```
-
-Use `less` or `cat` commands to check the contents of `MyFirstJob.o#####` Note: ##### will be the job id numbers.
 ```
 less MyFirstJob.o91091
 ```
