@@ -89,6 +89,10 @@ There will be two files starting with `MyFirstJob`
 ls
 ```
 Use `less` or `cat` commands to check the contents of `MyFirstJob.o#####` Note: ##### will be the job id numbers.
+```
+less MyFirstJob.o91091
+```
+
 ### Installing SRAtoolkit
 
 1) Download SRAtoolkit tar file
@@ -134,7 +138,4 @@ CATTCTTCACGTAGTTCTCGAGCCTTGGTTTTCAGCGATGGAGAATGACTTTGACAAGCTGAGAGAAGNTNC
 AAGTAGGTCTCGTCTGTGTTTTCTACGAGCTTGTGTTCCAGCTGACCCACTCCCTGGGTGGGGGGACTGGGT
 +SRR390728.2 2 length=72
 ;;;;;;;;;;;;;;;;;4;;;;3;393.1+4&&5&&;;;;;;;;;;;;;;;;;;;;;<9;<;;;;;464262
-```
-```
-less MyFirstJob.o91091
 ```
