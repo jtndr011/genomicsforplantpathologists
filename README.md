@@ -221,3 +221,21 @@ rm -r folder1
 ### Uploading and downloading files into your CCAST account
 
 25) Upload two files `genes.fasta` and `protein.fasta` using CCAST website.
+
+
+---
+### Explore the contents of these files
+
+26) Viewing the `genes.fasta` file's contents
+```bash
+cat genes.fasta
+```
+
+```bash
+less genes.fasta
+```
+
+27) Counting the number of genes in `genes.fasta` file
+```bash
+grep -c ">" genes.fasta
+```
