@@ -1,8 +1,8 @@
-# Genomics For Plant Pathologists
-
-### Interactive session
+## Interactive session
 
 !!! Note: change firstname.lastname with your names
+
+### Basic things first
 
 1) Sign in your CCAST account
 ```bash
@@ -34,6 +34,10 @@ ls -alh
 ```
 > **ls -alh:** provide the info about hidden files, size of the files, and other features
 
+---
+
+### Creating folders/files
+
 6) Let's create a new folder named `workshop` 
 ```bash
 mkdir workshop
@@ -42,6 +46,7 @@ mkdir workshop
 
 7) Move into this newly created `workshop` folder
 > **Give it a try before seeing the answer**
+
 <details>
 <summary> <b>Answer</b> </summary>
   cd workshop
@@ -55,87 +60,164 @@ mkdir workshop
   mkdir week1 week2 week3 week4
 </details>
 
-### Submitting jobs on CCAST
-**Step I:** Create and edit a PBS job file using `vim job.pbs`
+9) Move into the week1 folder
+> **Give it a try before seeing the answer**
 
-**Step II:** Hit `i` to turn on the writing mode. Now, copy and paste the following:
+<details>
+<summary> <b>Answer</b> </summary>
+  cd week1
+</details>
+
+10) Let's create a new file with name `ThisIsMyFirstFile.txt`
 ```bash
-#!/bin/bash
-#PBS -N MyFirstJob
-#PBS -q training
-#PBS -l select=1:ncpus=1:mem=1gb
-#PBS -l walltime=05:00
-#PBS -W group_list=x-ccast-prj-training
-
-cd $PBS_O_WORKDIR
-
-echo "Welcome $USER"
-echo "Hello from $HOSTNAME"
-echo "I am running on $NCPUS CPU cores"
-sleep 60
-
-exit 0
+touch ThisIsMyFirstFile.txt
 ```
+> **touch:** this is used to create a new file
 
-**Step III:** Hit `esc`, then `:wq` to save the file and come out of editing mode
+11) List all the files now
+> **Give it a try before seeing the answer**
 
-**Step IV:** Submit the job using `qsub job.pbs`
+<details>
+<summary> <b>Answer</b> </summary>
+  ls
+</details>
 
-**Step V:** Check the status of the job using `qstat -u $USER`
+---
 
-### Checking the result files
-There will be two files starting with `MyFirstJob`
+### Renaming and moving files
+
+12) Don't like the name, let's rename the file
 ```bash
-ls
-```
-Use `less` or `cat` commands to check the contents of `MyFirstJob.o#####` Note: ##### will be the job id numbers.
-```
-less MyFirstJob.o91091
+mv ThisIsMyFirstFile.txt pathogens.txt
 ```
 
-### Installing SRAtoolkit
+13) Now create another folder named `folder1`
+> **Give it a try before seeing the answer**
 
-1) Download SRAtoolkit tar file
+<details>
+<summary> <b>Answer</b> </summary>
+  mkdir folder1
+</details>
+
+14) Move `pathogens.txt` in `folder1`
 ```bash
-wget --output-document sratoolkit.tar.gz https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/current/sratoolkit.current-ubuntu64.tar.gz
+mv pathogens.txt folder1
+```
+> **Note:** mv is used for renaming as well as moving the files
+
+15) Go in the `folder1`
+> **Give it a try before seeing the answer**
+
+<details>
+<summary> <b>Answer</b> </summary>
+  cd folder1
+</details>
+
+---
+
+### Editing the files
+
+16) Now let's edit the `pathogens.txt`
+```bash
+vim pathogens.txt
+```
+> **vim:** vim a text editor like notepad, but for command line.
+
+Steps to edit a file:
+- `vim pathogens.txt` and hit enter
+- Hit `i` to turn on the editing mode
+- Type `This is a list of pathogens:`
+- Add 5 pathogen names such as 
+```bash
+Fusarium
+Puccinia
+Alternaria
+Uromyces
+Bacteria
+```
+- To save the file and get out of editing mode, hit `esc`, then `:wq`
+
+> **Congratulations!!!** You successfully created, edited and saved the file in command line. Yay!!! 
+
+---
+
+### Copying the files
+
+17) Now copy this file `pathogens.txt` with new name `pathogensAndPlants.txt`
+```bash
+cp pathogens.txt pathogensAndPlants.txt
+```
+> **cp:** This is used to copy a file in the present directory.
+
+18) Edit `pathogensAndPlants.txt` file to add the plant species on which these pathogens cause diseases
+
+For example
+```bash
+Fusarium (Barley)
+Puccinia (Wheat)
+... and so on
+```
+> **Give it a try before seeing the answer**
+
+<details>
+<summary> <b>Answer</b> </summary>
+  
+  vim pathogensAndPlants.txt
+
+  Hit i
+
+  Type the plants in the brackets
+
+  Hit esc, then :wq to save the file
+
+</details>
+
+---
+
+### Searching `patterns` in the files
+
+19) Let's find `Alternaria` in `pathogens.txt`
+```bash
+grep "Alternaria" pathogens.txt
+```
+> **grep:** This is used to find patterns in the files.
+
+20) Let's find `Alternaria` in `pathogensAndPlants.txt`
+> **Give it a try before seeing the answer**
+
+<details>
+<summary> <b>Answer</b> </summary>
+  grep "Alternaria" pathogensAndPlants.txt
+</details>
+
+21) Now count how many times a word `Bacteria` came in the file `pathogens.txt`
+```bash
+grep -c "Bacteria" pathogens.txt
 ```
 
-2) Extract the tar file
-```bash
-tar -vxzf sratoolkit.tar.gz
-```
+---
 
-3) Add the `path` to bashrc file
-```bash
-echo "export PATH=\$PATH:$(pwd)/sratoolkit.3.2.0-ubuntu64/bin/" >> ~/.bashrc
-```
+### Deleting or removing the file/folders
 
-4) Exit your CCAST account by closing it
+22) Removing `pathogensAndPlants.txt` file
 ```bash
-exit
+rm pathogensAndPlants.txt
 ```
+> **rm:** This will remove/delete the file.
 
-5) Sign in the CCAST account again
+23) Now come out of the directory `folder1`
 ```bash
-ssh prime.ccast.ndsu.edu -l firstname.lastname
+cd ..
 ```
-> enter your password.
+> **cd ..:** The two dots means going back one directory. If you have to go two directories back do `cd ../..`
 
-6) Test the functioning of SRAtoolkit
+24) Now, let's delete the directory `folder1`
 ```bash
-fastq-dump --stdout -X 2 SRR390728
+rm -r folder1
 ```
+> **-r:** The will delete the folder and all the files inside the folder. Alternatively, you can use `rmdir folder1` to delete the directory.
 
-You will get the following output printed on your screen, which means everything is working 
-```bash
-Read 2 spots for SRR390728
-Written 2 spots for SRR390728
-@SRR390728.1 1 length=72
-CATTCTTCACGTAGTTCTCGAGCCTTGGTTTTCAGCGATGGAGAATGACTTTGACAAGCTGAGAGAAGNTNC
-+SRR390728.1 1 length=72
-;;;;;;;;;;;;;;;;;;;;;;;;;;;9;;665142;;;;;;;;;;;;;;;;;;;;;;;;;;;;;96&&&&(
-@SRR390728.2 2 length=72
-AAGTAGGTCTCGTCTGTGTTTTCTACGAGCTTGTGTTCCAGCTGACCCACTCCCTGGGTGGGGGGACTGGGT
-+SRR390728.2 2 length=72
-;;;;;;;;;;;;;;;;;4;;;;3;393.1+4&&5&&;;;;;;;;;;;;;;;;;;;;;<9;<;;;;;464262
-```
+---
+### Uploading and downloading files into your CCAST account
+
+25) Upload two files `genes.fasta` and `protein.fasta` using CCAST website.
