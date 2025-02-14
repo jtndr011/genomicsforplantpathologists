@@ -406,3 +406,21 @@ exit 0
 
 ---
 
+## Genome assembly of Trichoderma using Flye
+
+```bash
+#!/bin/bash
+#PBS -N downloading
+#PBS -q default
+#PBS -l select=1:ncpus=8:mem=32gb
+#PBS -l walltime=24:0:00
+##change "x-ccast-prj" to "x-ccast-prj-[your project group name]"
+#PBS -W group_list=x-ccast-prj-ugill
+
+cd $PBS_O_WORKDIR
+
+flye --nano-hq SRR24827173.fastq --threads $NCPUS --out-dir trichoderma_asm
+
+exit 0
+```
+
