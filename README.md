@@ -7,6 +7,7 @@
 ### Basic things first
 
 !!! Skip step I if you signed in through the CCAST website
+
 1) Sign in your CCAST account
 ```bash
 ssh prime.ccast.ndsu.edu -l firstname.lastname
