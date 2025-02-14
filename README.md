@@ -1,9 +1,12 @@
-## Interactive session
+#Interactive session
+
+# Week 1
 
 !!! Note: change firstname.lastname with your names
 
 ### Basic things first
 
+!!! Skip step I if you signed in through the CCAST website
 1) Sign in your CCAST account
 ```bash
 ssh prime.ccast.ndsu.edu -l firstname.lastname
@@ -239,3 +242,167 @@ less genes.fasta
 ```bash
 grep -c ">" genes.fasta
 ```
+
+---
+# Week 2
+
+### Submitting jobs on CCAST
+**Step I:** Create and edit a PBS job file using `vim job.pbs`
+
+**Step II:** Hit `i` to turn on the writing mode. Now, copy and paste the following:
+```bash
+#!/bin/bash
+#PBS -N MyFirstJob
+#PBS -q training
+#PBS -l select=1:ncpus=1:mem=1gb
+#PBS -l walltime=05:00
+#PBS -W group_list=x-ccast-prj-training
+
+cd $PBS_O_WORKDIR
+
+echo "Welcome $USER"
+echo "Hello from $HOSTNAME"
+echo "I am running on $NCPUS CPU cores"
+sleep 60
+
+exit 0
+```
+
+**Step III:** Hit `esc`, then `:wq` to save the file and come out of editing mode
+
+**Step IV:** Submit the job using `qsub job.pbs`
+
+**Step V:** Check the status of the job using `qstat -u $USER`
+
+### Checking the result files
+There will be two files starting with `MyFirstJob`
+```bash
+ls
+```
+
+Use `less` or `cat` commands to check the contents of `MyFirstJob.o#####` Note: ##### will be the job id numbers.
+```
+less MyFirstJob.o91091
+```
+
+---
+
+
+## Installing Flye assembler
+
+1) Go the workshop directory
+```bash
+cd /mmfs1/scratch/jatinder.singh/workshop/
+```
+
+2) Create a folder called `softwares`
+```bash
+mkdir softwares
+```
+
+3) Go to this folder
+```bash
+cd softwares/
+```
+
+4) Load git software
+```bash
+module load git
+```
+
+5) Download flye assembler from the github
+```bash
+git clone https://github.com/fenderglass/Flye
+```
+
+6) Go in to the `Flye` folder
+```bash
+cd Flye
+```
+
+7) use the following command to install it
+```bash
+make
+```
+
+8) Add the software to the path
+```bash
+echo "export PATH=\$PATH:$(pwd)/bin/" >> ~/.bashrc
+```
+
+9) Exit the CCAST and Sign In again
+```bash
+exit
+```
+
+---
+
+## Downloading NCBI SRA data
+
+### Installing SRAtoolkit
+1) Go the workshop softwares directory
+```bash
+cd /mmfs1/scratch/jatinder.singh/workshop/softwares
+```
+
+2) Download SRAtoolkit tar file
+```bash
+wget --output-document sratoolkit.tar.gz https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/current/sratoolkit.current-ubuntu64.tar.gz
+```
+
+3) Extract the tar file
+```bash
+tar -vxzf sratoolkit.tar.gz
+```
+
+4) Add the `path` to bashrc file
+```bash
+echo "export PATH=\$PATH:$(pwd)/sratoolkit.3.2.0-ubuntu64/bin/" >> ~/.bashrc
+```
+
+5) Exit your CCAST account by closing it and sign in again
+```bash
+exit
+```
+
+6) Test the functioning of SRAtoolkit
+```bash
+fastq-dump --stdout -X 2 SRR390728
+```
+
+You will get the following output printed on your screen, which means everything is working 
+```bash
+Read 2 spots for SRR390728
+Written 2 spots for SRR390728
+@SRR390728.1 1 length=72
+CATTCTTCACGTAGTTCTCGAGCCTTGGTTTTCAGCGATGGAGAATGACTTTGACAAGCTGAGAGAAGNTNC
++SRR390728.1 1 length=72
+;;;;;;;;;;;;;;;;;;;;;;;;;;;9;;665142;;;;;;;;;;;;;;;;;;;;;;;;;;;;;96&&&&(
+@SRR390728.2 2 length=72
+AAGTAGGTCTCGTCTGTGTTTTCTACGAGCTTGTGTTCCAGCTGACCCACTCCCTGGGTGGGGGGACTGGGT
++SRR390728.2 2 length=72
+;;;;;;;;;;;;;;;;;4;;;;3;393.1+4&&5&&;;;;;;;;;;;;;;;;;;;;;<9;<;;;;;464262
+```
+
+---
+
+## Downloading data from SRA using job script in CCAST
+
+```bash
+#!/bin/bash
+#PBS -N downloading
+#PBS -q default
+#PBS -l select=1:ncpus=1:mem=1gb
+#PBS -l walltime=01:0:00
+##change "x-ccast-prj" to "x-ccast-prj-[your project group name]"
+#PBS -W group_list=x-ccast-prj-ugill
+
+cd $PBS_O_WORKDIR
+
+fastq-dump SRR24827173
+
+exit 0
+```
+
+---
+
