@@ -474,7 +474,7 @@ wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/034/140/825/GCF_034140825.1_AS
 gunzip -c GCF_034140825.1_ASM3414082v1_genomic.fna.gz > genome.fasta
 ```
 
-####Step : # annotation file (not required), but you can explore it if you want
+#### Step : annotation file (not required), but you can explore it if you want
 ```bash
 wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/034/140/825/GCF_034140825.1_ASM3414082v1/GCF_034140825.1_ASM3414082v1_genomic.gff.gz
 gunzip -c GCF_034140825.1_ASM3414082v1_genomic.gff.gz > annotation.gff
