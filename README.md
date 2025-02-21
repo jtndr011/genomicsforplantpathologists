@@ -425,3 +425,190 @@ flye --nano-hq SRR24827173.fastq --threads $NCPUS --out-dir trichoderma_asm
 exit 0
 ```
 
+# Week 3
+
+## Running the Bulk2SNPs pipeline
+
+### Step I: Load the required module
+```bash
+module load git
+module load singularity
+```
+
+### Step II: Clone the Bulk2SNPs repo
+```bash
+git clone https://github.com/NDSUrustlab/Bulk2SNPs.git
+```
+
+### Step III: Go the folder called `Bulk2SNPs`
+
+### Step IV: Now let's download the F2 bulk data from NCBI SRA to study the nematode resistance in rice
+
+> Important: Create a folder called `data` and then go into the `data` folder and run the following job to download the data.
+
+```bash
+#!/bin/bash
+#PBS -N downloading
+#PBS -q default
+#PBS -l select=1:ncpus=1:mem=1gb
+#PBS -l walltime=01:0:00
+##change "x-ccast-prj" to "x-ccast-prj-[your project group name]"
+#PBS -W group_list=x-ccast-prj-ugill
+
+cd $PBS_O_WORKDIR
+
+fastq-dump --split-files ERR2696321
+fastq-dump --split-files ERR2696322
+
+exit 0
+```
+
+### Step V: We also need to download the rice genome
+
+> Come out of the data folder !!!
+
+> Important: Create a folder called `genome` and then go into the `genome` folder and use the following code to download the rice genome.
+
+```bash
+wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/034/140/825/GCF_034140825.1_ASM3414082v1/GCF_034140825.1_ASM3414082v1_genomic.fna.gz
+gunzip -c GCF_034140825.1_ASM3414082v1_genomic.fna.gz > genome.fasta
+```
+
+####Step : # annotation file (not required), but you can explore it if you want
+```bash
+wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/034/140/825/GCF_034140825.1_ASM3414082v1/GCF_034140825.1_ASM3414082v1_genomic.gff.gz
+gunzip -c GCF_034140825.1_ASM3414082v1_genomic.gff.gz > annotation.gff
+ ```
+
+> Come out of the genome folder !!!
+
+### Step VI: Now let's download the singularity file containing all the required softwares
+```bash
+singularity pull bulk2snps.sif docker://jtndr/bulk2snps:latest
+```
+
+### Step VII: Giving the executable permission to `nextflow` file
+```bash
+chmod +x nextflow
+```
+
+### Step VIII: Finally, submitting the job to run the `Bulk2SNPs` pipeline
+
+> Create a job file called `pipeline.pbs` and paste the following code
+
+```bash
+#!/bin/bash
+#PBS -N nf
+#PBS -q bigmem
+#PBS -l select=1:ncpus=16:mem=128gb
+#PBS -l walltime=24:00:00
+##change "x-ccast-prj" to "x-ccast-prj-[your project group name]"
+#PBS -W group_list=x-ccast-prj-ugill
+
+cd $PBS_O_WORKDIR
+
+module load singularity
+
+./nextflow run main.nf -with-singularity bulk2snps.sif \
+  --bulk1 ERR2696321 \
+  --bulk2 ERR2696322 \
+  --genome genome/genome.fasta
+
+exit 0
+```
+
+> Submit the job and check the status of the job.
+
+## QTL mapping using QTLseqr
+
+### Step I: Come out of `Bulk2SNPs` folder and create new folder called `QTLmapping` and go inside that folder
+
+### Step II: Copy the `Bulks_SNPs.table` file in current folder
+```bash
+cp ../Bulk2SNPs/results/final_SNPs/Bulks_SNPs.table .
+```
+
+### Step III: Go to the ondemand CCAST website and open `interactive apps` -> Rstudio
+
+### Step IV: Setwd to `QTLmapping` folder
+
+### Step V: Installing QTLseqr
+```R
+install.packages("devtools")
+devtools::install_github("bmansfeld/QTLseqr")
+```
+
+### Step VI: Create a new R script file called `QTLmapping.R`
+
+### Step VII: Copy paste the following R code 
+```R
+#load the package
+library("QTLseqr")
+
+#Set sample and file names
+HighBulk <- "ERR2696321"
+LowBulk <- "ERR2696322"
+file <- "Bulks_SNPs.table"
+
+#Choose which chromosomes will be included in the analysis (i.e. exclude smaller contigs)
+# Correctly generate chromosome names with leading zeros
+Chroms <- paste0("NC_0890", 35:46, ".1")
+
+# Print the chromosome names
+print(Chroms)
+
+#Import SNP data from file
+df <-
+  importFromGATK(
+    file = file,
+    highBulk = HighBulk,
+    lowBulk = LowBulk,
+    chromList = Chroms
+  )
+head(df)
+#Filter SNPs based on some criteria
+df_filt <-
+  filterSNPs(
+    SNPset = df,
+    refAlleleFreq = 0.05,
+    minTotalDepth = 20,
+    maxTotalDepth = 400
+  )
+
+#Run G' analysis
+df_filt <- runGprimeAnalysis(
+  SNPset = df_filt,
+  windowSize = 1000000,
+  outlierFilter = "deltaSNP")
+
+#Run QTLseq analysis
+df_filt <- runQTLseqAnalysis(
+  SNPset = df_filt,
+  windowSize = 1000000,
+  popStruc = "F2",
+  bulkSize = c(23, 23),
+  replications = 10000,
+  intervals = c(95, 99)
+)
+
+#Plot
+plotQTLStats(SNPset = df_filt, var = "nSNPs")
+plotQTLStats(SNPset = df_filt, var = "Gprime", plotThreshold = TRUE, q = 0.01)
+plotQTLStats(SNPset = df_filt, var = "deltaSNP", plotIntervals = TRUE)
+plotQTLStats(SNPset = df_filt, var = "negLog10Pval", plotThreshold = TRUE, q = 0.01)
+
+#export summary CSV
+getQTLTable(SNPset = df_filt, alpha = 0.01, export = TRUE, fileName = "Bulk_rice_nematode_QTL_0.01.csv")
+QTL <- getSigRegions(SNPset = df_filt, alpha = 0.01)
+head(QTL[[2]])
+
+
+# Open a graphical device to save the plot (e.g., PNG)
+png(filename = "QTLStats_plot_Gprime.png", width = 5000, height = 800, res = 300)
+
+# Generate the plot and save it to the file
+plotQTLStats(SNPset = df_filt, var = "Gprime", plotThreshold = TRUE, q = 0.01)
+
+# Close the graphical device
+dev.off()
+```
