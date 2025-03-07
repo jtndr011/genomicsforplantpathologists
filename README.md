@@ -612,3 +612,150 @@ plotQTLStats(SNPset = df_filt, var = "Gprime", plotThreshold = TRUE, q = 0.01)
 # Close the graphical device
 dev.off()
 ```
+# Week 4
+
+## Running GWAS analysis using GAPIT3
+
+### Step I: Upload the data to CCAST - week4 folder
+
+### Step II: Open R studio on CCAST
+
+### Step III: 
+```bash
+###########################################################
+########## STEP 1: Install the necessary packages #########
+###########################################################
+
+source("http://zzlab.net/GAPIT/GAPIT.library.R")
+source("https://zzlab.net/GAPIT/gapit_functions.txt")
+install.packages("devtools") # you need to install once
+devtools::install_github("jiabowang/GAPIT3",force=TRUE)
+library(GAPIT3) 
+ 
+
+########################################################
+########## STEP 2: Read all the data needed #########
+########################################################
+
+# Set working directory: a location in your computer where to put all datasets and output files
+list.files() # display available data within the folder
+
+# Read phenotype data
+pheno <- read.csv('ricePheno.csv')
+dim(pheno)
+# Run some summary statistics and figures
+summary(pheno)
+hist(pheno[,2])
+hist(pheno[,3]) 
+head(pheno)
+tail(pheno)
+
+# Read SNP data.Missing data in SNP is imputed with mean values (naive imputation). # SNP data format: Major=2; Minor =0; Hets=1;
+snp <- read.csv('riceSnp.csv')
+dim(snp)
+snp[1:10, 1:10] #first 10 rows and first 10 columns
+snp[1:10, 1:5] #first 10 rows and first 5 columns
+table(snp[,2])
+colnames(snp)[1] <- 'Taxa' # change name of column 1 
+
+# Read genetic map
+map <- read.csv('riceMap.csv') 
+dim(map)
+head(map)
+
+########################################################
+########## STEP 3: Run GWAS ############################
+########################################################
+
+# The analysis should be completed within couple minutes. In your current R working directory, you should
+# find multiples files with three types of extensions: pdf, csv, and txt. The pdf files include the Manhattan
+# plot and the QQ plot displayed above. 
+
+# Running model one at a time (e.g., GLM only). 
+# My suggestion is to create a folder for each model
+
+# General Linear model: Y= SNP + PCA + error
+dir.create('./GLM') # create a folder for all results from GLM analysis
+setwd('./GLM') # change folder where to put output files
+myGLM <- GAPIT(Y=pheno,GD=snp,GM=map,PCA.total=3, model="GLM")
+
+# Mixed Linear model: Y= SNP + Kinship + PCA + error (also known as Q+K); Q is replaced by PCA; 
+dir.create('./../MLM')
+setwd('./../MLM') # .. means one back in directory 
+myMLM <- GAPIT(Y=pheno,GD=snp,GM=map,PCA.total=3, model="MLM")
+
+#  Models for enhancing statistical power by improving model fit and reducing kinship matrix rank;
+# Options: 1. Compressed Mixed Linear Model (CMLM): 2.	Enriched Compressed Mixed Linear Model (ECMLM); 3. Settlement of MLM under Progressively Exclusive Relationship (SUPER);
+# 4. Settlement of MLM under Progressively Exclusive Relationship (SUPER): 
+dir.create('./../SUPER')
+setwd('./../SUPER')
+mySUPER <- GAPIT(Y=pheno,GD=snp,GM=map,PCA.total=3, model="SUPER")
+
+# Models to increase statistical power using multi-locus models
+# Options: 1. Multi-locus mixed model (MLMM); 2. 2.	Fixed and random model circulating probability unification (FarmCPU); 3. Bayesian Information and LD Iteratively Nested Keyway (BLINK):  
+dir.create('./../FarmCPU')
+setwd('./../FarmCPU')
+myFarmCPU <- GAPIT(Y=pheno,GD=snp,GM=map,PCA.total=3, model="FarmCPU")
+
+dir.create('./../MLMM')
+setwd('./../MLMM')
+myMLMM <- GAPIT(Y=pheno,GD=snp,GM=map,PCA.total=3, model="MLMM") 
+
+
+# Running multiple models in one line of code.
+# Notes: Results for different traits may vary depending on trait complexity
+dir.create('./MODELS')
+setwd('./../MODELS')
+myModels <- GAPIT(Y=pheno,GD=snp,GM=map,PCA.total=3, model=c("GLM", "MLM", "SUPER", "MLMM", "FarmCPU"), Multiple_analysis=TRUE) # c is used in R for combining different arguments;
+
+#########################################################################
+########### Determine the p-value threshold for publication  ############
+#########################################################################
+##
+##
+# STEP 1: Perform singular value decomposition; a method similar to PCA. 
+# You can use other function like princomp or svd in R, which should give the same results.
+
+
+# Step 1: Read numerically coded SNP data.
+X <- read.csv('riceSnp.csv', row.names=1)
+
+# Center and scale SNP data
+Xcs <- scale(as.matrix(X), center=TRUE, scale = TRUE)  
+	
+#   Perform singular value decomposition, similar to PCA 
+eigSnp <- svd(Xcs) 
+eigVals <- (eigSnp$d)^2 / ((dim(X)[1])-1) 
+
+	 
+# STEP 2: Calculate the p-value threshold using Li and Ji (2015) methods. Run the equation 5 in Li and Ji (2005).
+# Some SNPs are in LD due to physical distance (e.g., linkage) or other factor. So some SNPs are not really independent. 
+# The goal of this method is to calculate effective number of test (Meff), and use Meff to calculate p-value threshold.
+	
+Meff=0
+		
+for (i in 1:length(eigVals))	{		
+	if (abs(eigVals[i]) >= 1) I=1 else I=0			
+	fx = I + (abs(eigVals[i]) - floor(abs(eigVals[i])))			
+	Meff = Meff + fx  
+			
+}
+
+# Type Meff to verify effective number of test 
+
+Meff # Out of 34K SNP, only 557 are effective for testing SNP-trait association; 
+
+
+# STEP 3: Calculate the p-value threshold
+
+alpha_E <- 0.05   # Experiment-wise error rate.
+alpha_P <- 1 - (1 - alpha_E)^(1/Meff)   # Comparison-wise error rate.
+	
+
+# Translate the calculated p-value threshold into -log10(P-value);
+
+log10_P <- -log10(alpha_P) # This is the threshold that you can report in your paper. Any SNP that passes this threshold will be declared significant; 
+
+
+######################## END #################################
+```
